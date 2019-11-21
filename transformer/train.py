@@ -159,7 +159,7 @@ if __name__ == '__main__':
                         help="vocab file")
     parser.add_argument("--save", default="save_best.pth", type=str, required=False,
                         help="save file")
-    parser.add_argument("--epoch", default=3, type=int, required=False,
+    parser.add_argument("--epoch", default=10, type=int, required=False,
                         help="epoch")
     parser.add_argument("--batch", default=256, type=int, required=False,
                         help="batch")
