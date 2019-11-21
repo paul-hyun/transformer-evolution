@@ -1,4 +1,6 @@
 __pycache__/
 data/
+wandb/
 kowiki.model
 kowiki.vocab
+*.pth
