@@ -7,8 +7,10 @@ import wandb
 wandb.init(project="transformer-evolution")
 
 import torch
+import torch.distributed as dist
 import torch.nn as nn
-import torch.nn.functional as F
+import torch.multiprocessing as mp
+from torch.nn.parallel import DistributedDataParallel
 
 from vocab import load_vocab
 import config as cfg
@@ -26,14 +28,26 @@ def set_seed(args):
         torch.cuda.manual_seed_all(args.seed)
 
 
+""" init_process_group """ 
+def init_process_group(rank, world_size):
+    os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_PORT'] = '12355'
+    dist.init_process_group("gloo", rank=rank, world_size=world_size)
+
+
+""" destroy_process_group """
+def destroy_process_group():
+    dist.destroy_process_group()
+
+
 """ 모델 epoch 평가 """
-def eval_epoch(config, model, data_loader):
+def eval_epoch(config, rank, model, data_loader):
     matchs = []
     model.eval()
 
     n_word_total = 0
     n_correct_total = 0
-    with tqdm(total=len(data_loader), desc=f"Valid") as pbar:
+    with tqdm(total=len(data_loader), desc=f"Valid({rank})") as pbar:
         for i, value in enumerate(data_loader):
             labels, enc_inputs, dec_inputs = map(lambda v: v.to(config.device), value)
 
@@ -51,11 +65,11 @@ def eval_epoch(config, model, data_loader):
 
 
 """ 모델 epoch 학습 """
-def train_epoch(config, epoch, model, criterion, optimizer, scheduler, train_loader):
+def train_epoch(config, rank, epoch, model, criterion, optimizer, scheduler, train_loader):
     losses = []
     model.train()
 
-    with tqdm(total=len(train_loader), desc=f"Train {epoch}") as pbar:
+    with tqdm(total=len(train_loader), desc=f"Train({rank}) {epoch}") as pbar:
         for i, value in enumerate(train_loader):
             labels, enc_inputs, dec_inputs = map(lambda v: v.to(config.device), value)
 
@@ -77,28 +91,33 @@ def train_epoch(config, epoch, model, criterion, optimizer, scheduler, train_loa
 
 
 """ 모델 학습 """
-def train_model(args):
+def train_model(rank, world_size, args):
+    if 1 < args.n_gpu:
+        init_process_group(rank, world_size)
+
     vocab = load_vocab(args.vocab)
 
     config = cfg.Config.load(args.config)
     config.n_enc_vocab, config.n_dec_vocab = len(vocab), len(vocab)
-    config.device = torch.device(args.cuda if torch.cuda.is_available() else "cpu")
+    config.device = torch.device(f"cuda:{rank}" if torch.cuda.is_available() else "cpu")
     print(config)
 
     best_epoch, best_loss, best_score = 0, 0, 0
     model = transformer.MovieClassification(config)
     if os.path.isfile(args.save):
         best_epoch, best_loss, best_score = model.load(args.save)
-        print(f"load state dict from: {args.save}")
+        print(f"rank: {rank} load state dict from: {args.save}")
     if 1 < args.n_gpu:
-        model = nn.DataParallel(model)
-    model.to(config.device)
+        model.to(config.device)
+        model = DistributedDataParallel(model, device_ids=[rank], find_unused_parameters=True)
+    else:
+        model.to(config.device)
     wandb.watch(model)
 
     criterion = torch.nn.CrossEntropyLoss()
 
-    train_loader = data.build_data_loader(vocab, "../data/ratings_train.json", args.batch, shuffle=True)
-    test_loader = data.build_data_loader(vocab, "../data/ratings_test.json", args.batch, shuffle=False)
+    train_loader, train_sampler = data.build_data_loader(vocab, "../data/ratings_train.json", args, shuffle=True)
+    test_loader, _ = data.build_data_loader(vocab, "../data/ratings_test.json", args, shuffle=False)
 
     t_total = len(train_loader) * args.epoch
     no_decay = ['bias', 'LayerNorm.weight']
@@ -111,19 +130,25 @@ def train_model(args):
 
     offset = best_epoch
     for step in trange(args.epoch, desc="Epoch"):
+        if train_sampler:
+            train_sampler.set_epoch(step)
         epoch = step + offset
 
-        loss = train_epoch(config, epoch, model, criterion, optimizer, scheduler, train_loader)
-        score = eval_epoch(config, model, test_loader)
+        loss = train_epoch(config, rank, epoch, model, criterion, optimizer, scheduler, train_loader)
+        score = eval_epoch(config, rank, model, test_loader)
         wandb.log({"loss": loss, "accuracy": score})
 
-        if best_score < score:
+        best_score = 0
+        if (world_size == 0 or rank % world_size == 0) and best_score < score:
             best_epoch, best_loss, best_score = epoch, loss, score
-            if isinstance(model, nn.DataParallel):
+            if isinstance(model, DistributedDataParallel):
                 model.module.save(best_epoch, best_loss, best_score, args.save)
             else:
                 model.save(best_epoch, best_loss, best_score, args.save)
-            print(f">>>> save model to {args.save}, epoch={best_epoch}, loss={best_loss:.3f}, socre={best_score:.3f}")
+            print(f">>>> rank: {rank} save model to {args.save}, epoch={best_epoch}, loss={best_loss:.3f}, socre={best_score:.3f}")
+
+    if 1 < args.n_gpu:
+        destroy_process_group()
 
 
 if __name__ == '__main__':
@@ -134,22 +159,27 @@ if __name__ == '__main__':
                         help="vocab file")
     parser.add_argument("--save", default="save_best.pth", type=str, required=False,
                         help="save file")
-    parser.add_argument("--epoch", default=10, type=int, required=False,
+    parser.add_argument("--epoch", default=3, type=int, required=False,
                         help="epoch")
     parser.add_argument("--batch", default=256, type=int, required=False,
                         help="batch")
-    parser.add_argument("--cuda", default="cuda", type=str, required=False,
-                        help="cuda or cuda:<index>")
+    parser.add_argument("--gpu", default=None, type=int, required=False,
+                        help="GPU id to use.")
     parser.add_argument('--seed', type=int, default=42, required=False,
                         help="random seed for initialization")
     args = parser.parse_args()
 
     if torch.cuda.is_available():
-        args.n_gpu = torch.cuda.device_count() if args.cuda == "cuda" else 1
+        args.n_gpu = torch.cuda.device_count() if args.gpu is None else 1
     else:
         args.n_gpu = 0
     set_seed(args)
-    args.batch = args.batch * args.n_gpu if 1 < args.n_gpu else args.batch
 
-    train_model(args)
+    if 1 < args.n_gpu:
+        mp.spawn(train_model,
+             args=(args.n_gpu, args),
+             nprocs=args.n_gpu,
+             join=True)
+    else:
+        train_model(0 if args.gpu is None else args.gpu, args.n_gpu, args)
 

@@ -38,10 +38,15 @@ class MovieDataSet(torch.utils.data.Dataset):
 
 
 """ 데이터 로더 """
-def build_data_loader(vocab, infile, batch, shuffle=True):
+def build_data_loader(vocab, infile, args, shuffle=True):
     dataset = MovieDataSet(vocab, infile)
-    loader = torch.utils.data.DataLoader(dataset, batch_size=batch, shuffle=shuffle, collate_fn=movie_collate_fn)
-    return loader
+    if 1 < args.n_gpu and shuffle:
+        sampler = torch.utils.data.distributed.DistributedSampler(dataset)
+        loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch, sampler=sampler, collate_fn=movie_collate_fn)
+    else:
+        sampler = None
+        loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch, sampler=sampler, shuffle=shuffle, collate_fn=movie_collate_fn)
+    return loader, sampler
 
 
 """ movie data collate_fn """
