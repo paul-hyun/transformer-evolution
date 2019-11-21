@@ -147,7 +147,10 @@ class Encoder(nn.Module):
         self.layers = nn.ModuleList([EncoderLayer(self.config) for _ in range(self.config.n_layer)])
     
     def forward(self, inputs):
-        positions = torch.cumsum(torch.ones(inputs.size(1), dtype=torch.long).to(self.config.device), dim=0) * (1 - inputs.eq(self.config.i_pad).byte()).to(torch.long)
+        positions = torch.arange(inputs.size(1), device=inputs.device, dtype=inputs.dtype).expand(inputs.size(0), inputs.size(1)) + 1
+        pos_mask = inputs.eq(self.config.i_pad)
+        positions.masked_fill_(pos_mask, 0)
+
         # (bs, n_enc_seq, d_hidn)
         outputs = self.tkn_emb(inputs) + self.pos_emb(positions)
 
@@ -203,9 +206,12 @@ class Decoder(nn.Module):
         self.layers = nn.ModuleList([DecoderLayer(self.config) for _ in range(self.config.n_layer)])
     
     def forward(self, dec_inputs, enc_inputs, enc_outputs):
-        possitions = torch.cumsum(torch.ones(dec_inputs.size(1), dtype=torch.long).to(self.config.device), dim=0) * (1 - dec_inputs.eq(self.config.i_pad).byte()).to(torch.long)
+        positions = torch.arange(dec_inputs.size(1), device=dec_inputs.device, dtype=dec_inputs.dtype).expand(dec_inputs.size(0), dec_inputs.size(1)) + 1
+        pos_mask = dec_inputs.eq(self.config.i_pad)
+        positions.masked_fill_(pos_mask, 0)
+    
         # (bs, n_dec_seq, d_hidn)
-        dec_outputs = self.dec_emb(dec_inputs) + self.pos_emb(possitions)
+        dec_outputs = self.dec_emb(dec_inputs) + self.pos_emb(positions)
 
         # (bs, n_dec_seq, n_dec_seq)
         dec_attn_pad_mask = get_attn_pad_mask(dec_inputs, dec_inputs, self.config.i_pad)
