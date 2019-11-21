@@ -10,6 +10,7 @@ $ pip install pandas
 $ pip install tqdm
 $ pip install wget
 $ pip install sentencepiece
+$ pip install wandb
 ```
 
 
@@ -55,7 +56,7 @@ $ python common_data.py --mode prepare
 
 
 ## 모델
-#### [Transformer]()
+#### [Transformer](https://github.com/paul-hyun/transformer-evolution/tree/master/transformer)
 - 기본이 되는 Transformer 모델 입니다.
 - 논문은 [Attention Is All You Need](https://arxiv.org/abs/1706.03762)를 참고 하세요.
 
