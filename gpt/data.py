@@ -35,9 +35,27 @@ def create_pretrain_instances(doc, n_seq):
     return instances
 
 
+""" pretrain 데이터 생성 """
+def make_pretrain_data(args):
+    line_cnt = 0
+    with open(args.input, "r") as in_f:
+        for line in in_f:
+            line_cnt += 1
+
+    with open(args.output, "w") as out_f:
+        with open(args.input, "r") as in_f:
+            for i, line in enumerate(tqdm(in_f, total=line_cnt, desc="Make Pretrain Dataset", unit=" lines")):
+                data = json.loads(line)
+                instances = create_pretrain_instances(data["doc"], args.n_seq)
+                for instance in instances:
+                    out_f.write(json.dumps(instance))
+                    out_f.write("\n")
+                    
+
+
 """ pretrain 데이터셋 """
 class PretrainDataSet(torch.utils.data.Dataset):
-    def __init__(self, vocab, infile, n_seq):
+    def __init__(self, vocab, infile):
         self.vocab = vocab
         self.sentences = []
 
@@ -47,11 +65,9 @@ class PretrainDataSet(torch.utils.data.Dataset):
                 line_cnt += 1
 
         with open(infile, "r") as f:
-            for i, line in enumerate(tqdm(f, total=line_cnt, desc="Loading Dataset", unit=" lines")):
-                data = json.loads(line)
-                instances = create_pretrain_instances(data["doc"], n_seq)
-                for instance in instances:
-                    self.sentences.append([vocab.piece_to_id(p) for p in instance["tokens"]])
+            for i, line in enumerate(tqdm(f, total=line_cnt, desc="Make Pretrain Dataset", unit=" lines")):
+                instance = json.loads(line)
+                self.sentences.append([vocab.piece_to_id(p) for p in instance["tokens"]])
     
     def __len__(self):
         return len(self.sentences)
@@ -73,9 +89,9 @@ def pretrin_collate_fn(inputs):
     return batch
 
 
-""" pretraun 데이터 로더 """
-def build_pretrain_loader(vocab, infile, n_seq, args, shuffle=True):
-    dataset = PretrainDataSet(vocab, infile, n_seq)
+""" pretrain 데이터 로더 """
+def build_pretrain_loader(vocab, args, shuffle=True):
+    dataset = PretrainDataSet(vocab, args.input)
     if 1 < args.n_gpu and shuffle:
         sampler = torch.utils.data.distributed.DistributedSampler(dataset)
         loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch, sampler=sampler, collate_fn=pretrin_collate_fn)
@@ -135,4 +151,17 @@ def build_data_loader(vocab, infile, args, shuffle=True):
         sampler = None
         loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch, sampler=sampler, shuffle=shuffle, collate_fn=movie_collate_fn)
     return loader, sampler
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", default="../data/kowiki.json", type=str, required=False,
+                        help="input json file")
+    parser.add_argument("--output", default="../data/kowiki_gpt.json", type=str, required=False,
+                        help="output json file")
+    parser.add_argument("--n_seq", default=256, type=int, required=False,
+                        help="sequence length")
+    args = parser.parse_args()
+
+    make_pretrain_data(args)
 
