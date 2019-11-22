@@ -4,7 +4,6 @@ import os, argparse, datetime, time, re, collections, random
 from tqdm import tqdm, trange
 import numpy as np
 import wandb
-wandb.init(project="transformer-evolution")
 
 import torch
 import torch.distributed as dist
@@ -95,6 +94,7 @@ def train_model(rank, world_size, args):
     if 1 < args.n_gpu:
         init_process_group(rank, world_size)
     master = (world_size == 0 or rank % world_size == 0)
+    if master: wandb.init(project="transformer-evolution")
 
     vocab = load_vocab(args.vocab)
 
@@ -161,7 +161,7 @@ if __name__ == '__main__':
                         help="save file")
     parser.add_argument("--epoch", default=10, type=int, required=False,
                         help="epoch")
-    parser.add_argument("--batch", default=256, type=int, required=False,
+    parser.add_argument("--batch", default=128, type=int, required=False,
                         help="batch")
     parser.add_argument("--gpu", default=None, type=int, required=False,
                         help="GPU id to use.")

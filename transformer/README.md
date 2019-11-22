@@ -18,11 +18,13 @@ $ python train.py
 
 
 ## 결과
-학습이 진행되면서 epoch 5가 최고 점수를 내었고 이후 epoch 부터는 학습을 할 수록 점수가 떨어 짐
+| ITEM              | Pretrain | epoch  | loss  | accuracy |
+|-------------------|----------|--------|-------|----------|
+| transformer_pre:0 | 0        | 7      | 0.274 | 0.838    |
 
-- epoch: 5
-- loss: 0.299
-![train_loss](./img/train_loss.svg)
-- accuracy: 0.832
-![train_loss](./img/train_accuracy.svg)
+#### loss
+![](./img/loss.svg)
+
+#### accuracy
+![](./img/accuracy.svg)
 
