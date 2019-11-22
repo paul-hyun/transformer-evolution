@@ -60,6 +60,15 @@ $ python common_data.py --mode prepare
 - 기본이 되는 Transformer 모델 입니다.
 - 논문은 [Attention Is All You Need](https://arxiv.org/abs/1706.03762)를 참고 하세요.
 
+#### [GPT](https://github.com/paul-hyun/transformer-evolution/tree/master/gpt)
+- GPT 모델 입니다.
+- 논문은 [Improving Language Understanding
+by Generative Pre-Training](https://s3-us-west-2.amazonaws.com/openai-assets/research-covers/language-unsupervised/language_understanding_paper.pdf)를 참고 하세요.
+
+
+## Visualization
+- https://app.wandb.ai/cchyun/transformer-evolution
+
 
 ## 참고
 - https://github.com/graykode/nlp-tutorial
