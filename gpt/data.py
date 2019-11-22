@@ -162,5 +162,6 @@ if __name__ == '__main__':
                         help="sequence length")
     args = parser.parse_args()
 
-    make_pretrain_data(args)
+    if not os.path.isfile(args.output):
+        make_pretrain_data(args)
 
