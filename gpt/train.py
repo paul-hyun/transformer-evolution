@@ -130,8 +130,8 @@ def train_model(rank, world_size, args):
     criterion_lm = torch.nn.CrossEntropyLoss(ignore_index=config.i_pad, reduction='mean')
     criterion_cls = torch.nn.CrossEntropyLoss()
 
-    train_loader, train_sampler = data.build_data_loader(vocab, "../data/ratings_train.json", args, shuffle=True)
-    test_loader, _ = data.build_data_loader(vocab, "../data/ratings_test.json", args, shuffle=False)
+    train_loader, train_sampler = data.build_data_loader(vocab, args.train, args, shuffle=True)
+    test_loader, _ = data.build_data_loader(vocab, args.test, args, shuffle=False)
 
     t_total = len(train_loader) * args.epoch
     no_decay = ['bias', 'LayerNorm.weight']
@@ -172,6 +172,10 @@ if __name__ == '__main__':
                         help="language loss rate")
     parser.add_argument("--vocab", default="../kowiki.model", type=str, required=False,
                         help="vocab file")
+    parser.add_argument("--train", default="../data/ratings_train.json", type=str, required=False,
+                        help="input train file")
+    parser.add_argument("--test", default="../data/ratings_test.json", type=str, required=False,
+                        help="input test file")
     parser.add_argument("--save", default="save_best.pth", type=str, required=False,
                         help="save file")
     parser.add_argument("--pretrain", default="save_pretrain.pth", type=str, required=False,
