@@ -21,12 +21,13 @@ def prepare_pretrain(args, vocab, outfile):
         for i, line in enumerate(tqdm(f, total=line_cnt, desc=f"{args.corpus} loading", unit=" lines")):
             line = line.strip()
             if line == "":
-                if doc:
+                if 0 < len(doc):
                     docs.append(doc)
                     doc = []
             else:
                 pieces = vocab.encode_as_pieces(line)
-                doc.append(pieces)
+                if 0 < len(pieces):
+                    doc.append(pieces)
         if doc:
             docs.append(doc)
     
