@@ -94,6 +94,7 @@ def train_epoch(config, rank, epoch, model, criterion, optimizer, scheduler, tra
 def train_model(rank, world_size, args):
     if 1 < args.n_gpu:
         init_process_group(rank, world_size)
+    master = (world_size == 0 or rank % world_size == 0)
 
     vocab = load_vocab(args.vocab)
 
@@ -112,7 +113,7 @@ def train_model(rank, world_size, args):
         model = DistributedDataParallel(model, device_ids=[rank], find_unused_parameters=True)
     else:
         model.to(config.device)
-    wandb.watch(model)
+    if master: wandb.watch(model)
 
     criterion = torch.nn.CrossEntropyLoss()
 
@@ -136,10 +137,9 @@ def train_model(rank, world_size, args):
 
         loss = train_epoch(config, rank, epoch, model, criterion, optimizer, scheduler, train_loader)
         score = eval_epoch(config, rank, model, test_loader)
-        wandb.log({"loss": loss, "accuracy": score})
+        if master: wandb.log({"loss": loss, "accuracy": score})
 
-        best_score = 0
-        if (world_size == 0 or rank % world_size == 0) and best_score < score:
+        if master and best_score < score:
             best_epoch, best_loss, best_score = epoch, loss, score
             if isinstance(model, DistributedDataParallel):
                 model.module.save(best_epoch, best_loss, best_score, args.save)
