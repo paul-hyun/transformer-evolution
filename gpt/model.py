@@ -198,7 +198,7 @@ class GPTPretrain(nn.Module):
         dec_outputs, dec_self_attn_probs = self.gpt(dec_inputs)
         # (bs, n_dec_seq, n_dec_vocab)
         logits_lm = self.projection_lm(dec_outputs)
-        # (bs, n_output), [(bs, n_head, n_dec_seq, n_dec_seq)]
+        # (bs, n_dec_seq - 1, n_dec_vocab), (bs, n_output), [(bs, n_head, n_dec_seq, n_dec_seq)]
         return logits_lm[:, :-1, :].contiguous(), dec_self_attn_probs
 
 
@@ -224,7 +224,7 @@ class MovieClassification(nn.Module):
         dec_outputs = dec_outputs[:, -1]
         # (bs, n_output)
         logits_cls = self.projection_cls(dec_outputs)
-        # (bs, n_output), [(bs, n_head, n_dec_seq, n_dec_seq)]
+        # (bs, n_dec_seq - 1, n_dec_vocab), (bs, n_output), [(bs, n_head, n_dec_seq, n_dec_seq)]
         return logits_lm[:, :-1, :].contiguous(), logits_cls, dec_self_attn_probs
     
     def save(self, epoch, loss, score, path):
