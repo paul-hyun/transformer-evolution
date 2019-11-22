@@ -22,14 +22,15 @@ def create_pretrain_instances(doc, n_seq):
         current_chunk.append(doc[i]) # line
         current_length += len(doc[i])
         if i == len(doc) - 1 or current_length >= tgt_seq:
-            tokens = []
-            for chunk in current_chunk: tokens.extend(chunk)
-            tokens = tokens[:tgt_seq]
-            if 1 < len(tokens):
-                instance = {
-                    "tokens": ["[BOS]"] + tokens + ["[EOS]"],
-                }
-                instances.append(instance)
+            if 0 < len(current_chunk):
+                tokens = []
+                for chunk in current_chunk: tokens.extend(chunk)
+                tokens = tokens[:tgt_seq]
+                if 1 < len(tokens):
+                    instance = {
+                        "tokens": ["[BOS]"] + tokens + ["[EOS]"],
+                    }
+                    instances.append(instance)
             current_chunk = []
             current_length = 0
     return instances
@@ -42,14 +43,19 @@ def make_pretrain_data(args):
         for line in in_f:
             line_cnt += 1
 
+    datas = []
+    with open(args.input, "r") as f:
+        for i, line in enumerate(tqdm(f, total=line_cnt, desc="Loading Dataset", unit=" lines")):
+            data = json.loads(line)
+            if 0 < len(data["doc"]):
+                datas.append(data)
+
     with open(args.output, "w") as out_f:
-        with open(args.input, "r") as in_f:
-            for i, line in enumerate(tqdm(in_f, total=line_cnt, desc="Make Pretrain Dataset", unit=" lines")):
-                data = json.loads(line)
-                instances = create_pretrain_instances(data["doc"], args.n_seq)
-                for instance in instances:
-                    out_f.write(json.dumps(instance))
-                    out_f.write("\n")
+        for i, data in enumerate(tqdm(datas, desc="Make Pretrain Dataset", unit=" lines")):
+            instances = create_pretrain_instances(data["doc"], args.n_seq)
+            for instance in instances:
+                out_f.write(json.dumps(instance))
+                out_f.write("\n")
               
 
 """ pretrain 데이터셋 """
