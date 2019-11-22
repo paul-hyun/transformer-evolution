@@ -51,7 +51,7 @@ $ python common_data.py --mode prepare
 
 
 ## 기타
-- 사용하는 GPU 자원의 한계로 config 설정은 기본 값의 1/2을 사용 했습니다. (config_half.json)
+- 사용하는 GPU 자원의 한계로 config 설정은 hidden 및 관련 parameter 1/2로 줄여서 테스트 했습니다. (config_half.json)
 - GPU 자원이 충분한 경우 config.json을 사용하면 됩니다.
 
 
@@ -64,6 +64,10 @@ $ python common_data.py --mode prepare
 - GPT 모델 입니다.
 - 논문은 [Improving Language Understanding
 by Generative Pre-Training](https://s3-us-west-2.amazonaws.com/openai-assets/research-covers/language-unsupervised/language_understanding_paper.pdf)를 참고 하세요.
+
+#### [BERT](https://github.com/paul-hyun/transformer-evolution/tree/master/bert)
+- BERT 모델 입니다.
+- 논문은 [BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding](https://arxiv.org/abs/1810.04805)를 참고 하세요.
 
 
 ## Visualization
