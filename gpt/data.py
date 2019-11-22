@@ -50,8 +50,7 @@ def make_pretrain_data(args):
                 for instance in instances:
                     out_f.write(json.dumps(instance))
                     out_f.write("\n")
-                    
-
+              
 
 """ pretrain 데이터셋 """
 class PretrainDataSet(torch.utils.data.Dataset):
