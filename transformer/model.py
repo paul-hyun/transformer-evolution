@@ -140,7 +140,7 @@ class Encoder(nn.Module):
         super().__init__()
         self.config = config
 
-        self.tkn_emb = nn.Embedding(self.config.n_enc_vocab, self.config.d_hidn)
+        self.enc_emb = nn.Embedding(self.config.n_enc_vocab, self.config.d_hidn)
         sinusoid_table = torch.FloatTensor(get_sinusoid_encoding_table(self.config.n_enc_seq + 1, self.config.d_hidn))
         self.pos_emb = nn.Embedding.from_pretrained(sinusoid_table, freeze=True)
 
@@ -152,7 +152,7 @@ class Encoder(nn.Module):
         positions.masked_fill_(pos_mask, 0)
 
         # (bs, n_enc_seq, d_hidn)
-        outputs = self.tkn_emb(inputs) + self.pos_emb(positions)
+        outputs = self.enc_emb(inputs) + self.pos_emb(positions)
 
         # (bs, n_enc_seq, n_enc_seq)
         attn_mask = get_attn_pad_mask(inputs, inputs, self.config.i_pad)
