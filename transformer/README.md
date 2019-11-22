@@ -22,7 +22,7 @@ $ python train.py
 
 - epoch: 5
 - loss: 0.299
-![train_loss](./train_loss.svg)
+![train_loss](./img/train_loss.svg)
 - accuracy: 0.832
-![train_loss](./train_accuracy.svg)
+![train_loss](./img/train_accuracy.svg)
 
