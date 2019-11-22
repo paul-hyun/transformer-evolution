@@ -94,7 +94,7 @@ def train_model(rank, world_size, args):
 
     criterion_lm = torch.nn.CrossEntropyLoss(ignore_index=config.i_pad, reduction='mean')
 
-    train_loader, train_sampler = data.build_pretrain_loader(vocab, "../data/kowiki.json", config.n_dec_seq, args, shuffle=True)
+    train_loader, train_sampler = data.build_pretrain_loader(vocab, args, shuffle=True)
 
     t_total = len(train_loader) * args.epoch
     no_decay = ['bias', 'LayerNorm.weight']
@@ -131,6 +131,8 @@ if __name__ == '__main__':
                         help="config file")
     parser.add_argument("--vocab", default="../kowiki.model", type=str, required=False,
                         help="vocab file")
+    parser.add_argument("--input", default="../data/kowiki_gpt.json", type=str, required=False,
+                        help="input pretrain data file")
     parser.add_argument("--save", default="save_pretrain.pth", type=str, required=False,
                         help="save file")
     parser.add_argument("--epoch", default=5, type=int, required=False,
@@ -156,6 +158,4 @@ if __name__ == '__main__':
              join=True)
     else:
         train_model(0 if args.gpu is None else args.gpu, args.n_gpu, args)
-
-
 
