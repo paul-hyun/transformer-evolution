@@ -57,34 +57,18 @@ $ python train.py
 
 ## 결과
 
-### no pretrain / no lanague model
-학습이 진행되면서 epoch 3이 최고 점수를 내었고 이후 epoch 부터는 학습을 할 수록 점수가 떨어 짐
-- epoch: 3
-- loss: 0.297
-![train_loss](./img/loss-nopre-nolm.svg)
-- accuracy: 0.821
-![train_loss](./img/accuracy-nopre-nolm.svg)
+| ITEM            | Pretrain | LM   | epoch  | loss  | accuracy |
+|-----------------|----------|------|--------|-------|----------|
+| gpt-pre:0-lm:0  | 0        | 0    | 9      | 0.174 | 0.828    |
+| gpt-pre:0-lm:25 | 0        | 0.25 | 9      | 0.417 | 0.798    |
+| gpt-pre:5-lm:0  | 5        | 0    | 9      | 0.220 | 0.824    |
+| gpt-pre:5-lm:25 | 5        | 0.25 |       |  |     |
 
-### no pretrain / lanague model
-학습이 진행되면서 꾸준하게 성능이 좋아짐 학습 데이터가 많고 epoch를 충분히 늘려 주면 더 좋은 결과를 낼것으로 예상 됨
-- epoch: 9
-- loss: 0.361
-![train_loss](./img/loss-nopre-lm.svg)
-- accuracy: 0.807
-![train_loss](./img/accuracy-nopre-lm.svg)
+- 네트웍의 크기를 절반으로 하고 
 
-### 5 epoch pretrain / no lanague model
-Pretrain안할 때 보다 학습은 안정적이 되었으나 성능은 오히려 떨어짐. 테스트를 위해서 작은 네크워크를 사용했고 Pretrain이 충분하지 않았던 것으로 판단됨
-- epoch: 7
-- loss: 0.255
-![train_loss](./img/loss-5pre-nolm.svg)
-- accuracy: 0.816
-![train_loss](./img/accuracy-5pre-nolm.svg)
 
-### 5 epoch pretrain / lanague model
-Pretrain을 더 하고, 학습 epoch도 늘려주면 더 좋은 성능을 낼 것으로 기대 됨
-- epoch: 9
-- loss: 0.31
-![train_loss](./img/loss-5pre-lm.svg)
-- accuracy: 0.813
-![train_loss](./img/accuracy-5pre-lm.svg)
+#### loss
+![](./img/loss.svg)
+
+#### accuracy
+![](./img/accuracy.svg)

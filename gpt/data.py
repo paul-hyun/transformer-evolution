@@ -164,7 +164,7 @@ if __name__ == '__main__':
                         help="input json file")
     parser.add_argument("--output", default="../data/kowiki_gpt.json", type=str, required=False,
                         help="output json file")
-    parser.add_argument("--n_seq", default=256, type=int, required=False,
+    parser.add_argument("--n_seq", default=512, type=int, required=False,
                         help="sequence length")
     args = parser.parse_args()
 
