@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 import torch
 import torch.nn as nn
@@ -32,6 +33,11 @@ def get_attn_decoder_mask(seq):
     subsequent_mask = torch.ones_like(seq).unsqueeze(-1).expand(seq.size(0), seq.size(1), seq.size(1))
     subsequent_mask = subsequent_mask.triu(diagonal=1) # upper triangular part of a matrix(2-D)
     return subsequent_mask
+
+
+"""gelu"""
+def gelu(x):
+    return 0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * torch.pow(x, 3))))
 
 
 """ scale dot product attention """
@@ -99,12 +105,12 @@ class PoswiseFeedForwardNet(nn.Module):
 
         self.conv1 = nn.Conv1d(in_channels=self.config.d_hidn, out_channels=self.config.d_ff, kernel_size=1)
         self.conv2 = nn.Conv1d(in_channels=self.config.d_ff, out_channels=self.config.d_hidn, kernel_size=1)
-        self.layer_norm = nn.LayerNorm(self.config.d_hidn)
+        self.active = gelu
         self.dropout = nn.Dropout(config.dropout)
 
     def forward(self, inputs):
         # (bs, d_ff, n_seq)
-        output = F.relu(self.conv1(inputs.transpose(1, 2)))
+        output = self.active(self.conv1(inputs.transpose(1, 2)))
         # (bs, n_seq, d_hidn)
         output = self.conv2(output).transpose(1, 2)
         output = self.dropout(output)
