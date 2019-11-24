@@ -56,6 +56,10 @@ $ python train.py
 
 
 ## 결과
+![](./img/object_function.png)
+- pretrain 5회 후 L1, L2를 동시에 학습한 경우가 가장 좋은 결과를 냈습니다. (gpt-pre:5-lm:50)
+- L2만 학습한 경우는 pretrain을 안한 경우가 더 좋은 결과를 냈습니다. (gpt-pre:0-lm:0 < gpt-pre:5-lm:0)
+- pretrain을 너무 적은 량의 데이터를 적은 epoch을 수행해서 그런것이 아닌가 예상됩니다. (한국어 위키 600M, 5 epoch 학습)
 
 | ITEM            | Pretrain | LM  | epoch  | loss  | accuracy |
 |-----------------|----------|-----|--------|-------|----------|
