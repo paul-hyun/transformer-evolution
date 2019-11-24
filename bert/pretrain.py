@@ -138,7 +138,7 @@ if __name__ == '__main__':
                         help="save file")
     parser.add_argument("--epoch", default=5, type=int, required=False,
                         help="epoch")
-    parser.add_argument("--batch", default=32, type=int, required=False,
+    parser.add_argument("--batch", default=28, type=int, required=False,
                         help="batch")
     parser.add_argument("--gpu", default=None, type=int, required=False,
                         help="GPU id to use.")

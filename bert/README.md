@@ -30,7 +30,7 @@ $ python pretrain.py
 - input: 학습 데이터 파일 입니다. (기본 값: ../data/kowiki_gpt.json)
 - save: 모델을 저장할 위치 입니다. (기본 값: save_pretrain.pth)
 - epoch: 학습 epoch 입니다. (기본 값: 3)
-- batch: 학습 batch_size 입니다. (기본 값: 128)
+- batch: 학습 batch_size 입니다. (기본 값: 28)
 - gpu: 학습을 실행할 GPU 입니다. (기본 값: None) 특정 GPU에서만 동작하길 원하는 경우는 0, 1 과 같이 GPU ID를 지정해 주면 됩니다.
 - seed: 랜덤 seed 입니다. (기본 값: 42)
 
@@ -60,6 +60,6 @@ $ python train.py
 
 | ITEM       | Pretrain | epoch  | loss  | accuracy |
 |------------|----------|--------|-------|----------|
-| bert-pre:0 | 0        | 6      | 0.310 | 0.822    |
+| bert-pre:0 | 0        | 9      | 0.221 | 0.824    |
 | bert-pre:5 | 5        |       |  |     |
 
