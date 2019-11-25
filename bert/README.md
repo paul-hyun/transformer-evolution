@@ -61,5 +61,11 @@ $ python train.py
 | ITEM       | Pretrain | epoch  | loss  | accuracy |
 |------------|----------|--------|-------|----------|
 | bert-pre:0 | 0        | 9      | 0.221 | 0.824    |
-| bert-pre:5 | 5        |       |  |     |
+| bert-pre:5 | 5        | 9      | 0.190 | 0.827    |
+
+#### loss
+![](./img/loss.svg)
+
+#### accuracy
+![](./img/accuracy.svg)
 
