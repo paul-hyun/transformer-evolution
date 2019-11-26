@@ -205,7 +205,7 @@ class BERTPretrain(nn.Module):
         logits_cls = self.projection_cls(outputs[:, 0])
         # (bs, n_dec_seq, n_dec_vocab)
         logits_lm = self.projection_lm(outputs)
-        # (bs, n_dec_seq - 1, n_enc_vocab), (bs, n_output), [(bs, n_head, n_dec_seq, n_dec_seq)]
+        # (bs, n_enc_vocab), (bs, n_dec_seq, n_enc_vocab), [(bs, n_head, n_dec_seq, n_dec_seq)]
         return logits_cls, logits_lm, attn_probs
 
 
