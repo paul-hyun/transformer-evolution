@@ -29,6 +29,8 @@ def create_pretrain_mask(tokens, mask_cnt, vocab_list):
     for index_set in cand_idx:
         if len(mask_lms) >= mask_cnt:
             break
+        if len(mask_lms) + len(index_set) > mask_cnt:
+            continue
         for index in index_set:
             masked_token = None
             if random() < 0.8: # 80% replace with [MASK]
