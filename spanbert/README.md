@@ -57,6 +57,7 @@ $ python train.py
 
 
 ## 결과
+마지막 classfication 위한 값을 뽑는 과정을 cls token, output mean, output max 3가지로 확인해 봤습니다. 미세하지만 max가 좀더 좋은 효과를 냈습니다.
 
 | ITEM                | Pretrain | logit | epoch  | loss  | accuracy |
 |---------------------|----------|-------|--------|-------|----------|
