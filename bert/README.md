@@ -11,8 +11,8 @@ pretrain을 위한 데이터를 만드는 과정 입니다.
 $ python data.py
 ```
 - input: 입력 파일 입니다.. (기본 값: ../data/kowiki.json)
-- output: 저장 파일 입니다. (기본 값: ../data/kowiki_gpt.json)
-- n_seq: 최대 token 길이 입니다. (기본 값: 256)
+- output: 저장 파일 입니다. (기본 값: ../data/kowiki_bert.json)
+- n_seq: 최대 token 길이 입니다. (기본 값: 512)
 - vocab: 사용할 vocab 파일 입니다. (기본 값: ../kowiki.model)
 - mask_prob: mask 확률 입니다. 입니다. (기본 값: 0.15)
 
