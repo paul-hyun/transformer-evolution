@@ -58,10 +58,11 @@ $ python train.py
 
 ## 결과
 
-| ITEM       | Pretrain | epoch  | loss  | accuracy |
-|------------|----------|--------|-------|----------|
-| bert-pre:0 | 0        | 9      | 0.221 | 0.824    |
-| bert-pre:5 | 5        | 9      | 0.190 | 0.827    |
+| ITEM        | Pretrain | epoch  | loss  | accuracy |
+|-------------|----------|--------|-------|----------|
+| bert-pre:0  | 0        | 9      | 0.221 | 0.824    |
+| bert-pre:5  | 5        | 9      | 0.190 | 0.827    |
+| bert-pre:10 | 10       | 5      | 0.261 | 0.826    |
 
 #### loss
 ![](./img/loss.svg)

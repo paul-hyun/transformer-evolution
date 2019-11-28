@@ -65,6 +65,7 @@ $ python train.py
 | spabbert-pre:5-cls  | 5        | cls   | 9      | 0.201 | 0.826    |
 | spabbert-pre:5-mean | 5        | mean  | 9      | 0.178 | 0.826    |
 | spabbert-pre:5-max  | 5        | max   | 9      | 0.184 | 0.827    |
+| spanbert-pre:10-max | 10       | max   | 5      | 0.254 | 0.827    |
 
 #### loss
 ![](./img/loss.svg)

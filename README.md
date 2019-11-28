@@ -70,7 +70,21 @@ by Generative Pre-Training](https://s3-us-west-2.amazonaws.com/openai-assets/res
 - 논문은 [BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding](https://arxiv.org/abs/1810.04805)를 참고 하세요.
 
 
-## Visualization
+## 결과
+| ITEM                | Pretrain | epoch  | loss  | accuracy |
+|---------------------|----------|--------|-------|----------|
+| transformer_pre:0   | 0        | 6      | 0.257 | 0.839    |
+| gpt-pre:10-lm:50    | 10       | 9      | 0.253 | 0.844    |
+| bert-pre:5          | 5        | 9      | 0.190 | 0.827    |
+| spanbert-pre:10-max | 10       | 5      | 0.254 | 0.827    |
+
+#### loss
+![](./img/loss.svg)
+
+#### accuracy
+![](./img/accuracy.svg)
+
+자세한 내용은 아래를 참고 하세요.
 - https://app.wandb.ai/cchyun/transformer-evolution
 
 
