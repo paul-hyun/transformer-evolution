@@ -101,7 +101,6 @@ def train_model(rank, world_size, args):
     vocab = load_vocab(args.vocab)
 
     config = cfg.Config.load(args.config)
-    config.lm = args.lm
     config.n_enc_vocab, config.n_dec_vocab = len(vocab), len(vocab)
     config.device = torch.device(f"cuda:{rank}" if torch.cuda.is_available() else "cpu")
     print(config)
@@ -161,8 +160,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="config_half.json", type=str, required=False,
                         help="config file")
-    parser.add_argument("--lm", default=0.5, type=float, required=False,
-                        help="language loss rate")
     parser.add_argument("--vocab", default="../kowiki.model", type=str, required=False,
                         help="vocab file")
     parser.add_argument("--train", default="../data/ratings_train.json", type=str, required=False,
