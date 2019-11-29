@@ -319,4 +319,6 @@ if __name__ == '__main__':
 
     if not os.path.isfile(args.output):
         make_pretrain_data(args)
+    else:
+        print(f"{args.output} exists")
 
