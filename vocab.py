@@ -43,7 +43,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--prefix", default="kowiki", type=str, required=False,
                         help="vocab prefix 입니다.")
-    parser.add_argument("--vocab_size", default=32000, type=int, required=False,
+    parser.add_argument("--vocab_size", default=8000, type=int, required=False,
                         help="생성할 vocab 수 입니다.")
     args = parser.parse_args()
 
