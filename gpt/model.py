@@ -222,7 +222,7 @@ class MovieClassification(nn.Module):
         # (bs, n_dec_seq, n_dec_vocab)
         logits_lm = self.projection_lm(dec_outputs)
         # (bs, d_hidn)
-        dec_outputs = dec_outputs[:, -1]
+        dec_outputs = dec_outputs[:, -1].contiguous()
         # (bs, n_output)
         logits_cls = self.projection_cls(dec_outputs)
         # (bs, n_dec_seq - 1, n_dec_vocab), (bs, n_output), [(bs, n_head, n_dec_seq, n_dec_seq)]

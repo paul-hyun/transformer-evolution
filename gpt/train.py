@@ -118,8 +118,8 @@ def train_model(rank, world_size, args):
         best_epoch, best_loss, best_score = model.load(args.save)
         print(f"rank: {rank} load state dict from: {args.save}")
     elif os.path.isfile(args.pretrain):
-        model.gpt.load(args.pretrain)
-        print(f"rank: {rank} load pretrain from: {args.pretrain}")
+        epoch, loss = model.gpt.load(args.pretrain)
+        print(f"rank: {rank} load pretrain from: {args.pretrain}, epoch={epoch}, loss={loss}")
     if 1 < args.n_gpu:
         model.to(config.device)
         model = DistributedDataParallel(model, device_ids=[rank], find_unused_parameters=True)
@@ -168,8 +168,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="config_half.json", type=str, required=False,
                         help="config file")
-    parser.add_argument("--lm", default=0.5, type=float, required=False,
-                        help="language loss rate")
+    parser.add_argument("--lm", default=0.0, type=float, required=False,
+                        help="language model loss rate")
     parser.add_argument("--vocab", default="../kowiki.model", type=str, required=False,
                         help="vocab file")
     parser.add_argument("--train", default="../data/ratings_train.json", type=str, required=False,
