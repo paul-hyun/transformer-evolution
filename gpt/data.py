@@ -172,7 +172,7 @@ def build_data_loader(vocab, infile, args, shuffle=True):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", default="../data/kowiki.txt", type=str, required=False,
-                        help="input json file")
+                        help="input text file")
     parser.add_argument("--output", default="../data/kowiki_gpt.json", type=str, required=False,
                         help="output json file")
     parser.add_argument("--n_seq", default=256, type=int, required=False,
