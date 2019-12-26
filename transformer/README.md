@@ -20,7 +20,7 @@ $ python train.py
 ## 결과
 | ITEM              | Pretrain | epoch  | loss  | accuracy |
 |-------------------|----------|--------|-------|----------|
-| transformer_pre:0 | 0        | 6      | 0.257 | 0.839    |
+| transformer-pre:0 | 0        | 18     | 0.303 | 0.832    |
 
 #### loss
 ![](./img/loss.svg)

@@ -21,11 +21,6 @@ def get_attn_decoder_mask(seq):
     return subsequent_mask
 
 
-"""gelu"""
-def gelu(x):
-    return 0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * torch.pow(x, 3))))
-
-
 """ scale dot product attention """
 class ScaledDotProductAttention(nn.Module):
     def __init__(self, config):
@@ -53,9 +48,9 @@ class MultiHeadAttention(nn.Module):
         super().__init__()
         self.config = config
 
-        self.W_Q = nn.Linear(self.config.d_hidn, self.config.d_head * self.config.n_head)
-        self.W_K = nn.Linear(self.config.d_hidn, self.config.d_head * self.config.n_head)
-        self.W_V = nn.Linear(self.config.d_hidn, self.config.d_head * self.config.n_head)
+        self.W_Q = nn.Linear(self.config.d_hidn, self.config.n_head * self.config.d_head)
+        self.W_K = nn.Linear(self.config.d_hidn, self.config.n_head * self.config.d_head)
+        self.W_V = nn.Linear(self.config.d_hidn, self.config.n_head * self.config.d_head)
         self.scaled_dot_attn = ScaledDotProductAttention(self.config)
         self.linear = nn.Linear(self.config.n_head * self.config.d_head, self.config.d_hidn)
         self.dropout = nn.Dropout(config.dropout)
@@ -91,7 +86,7 @@ class PoswiseFeedForwardNet(nn.Module):
 
         self.conv1 = nn.Conv1d(in_channels=self.config.d_hidn, out_channels=self.config.d_ff, kernel_size=1)
         self.conv2 = nn.Conv1d(in_channels=self.config.d_ff, out_channels=self.config.d_hidn, kernel_size=1)
-        self.active = gelu
+        self.active = F.gelu
         self.dropout = nn.Dropout(config.dropout)
 
     def forward(self, inputs):
@@ -126,7 +121,7 @@ class EncoderLayer(nn.Module):
         return ffn_outputs, attn_prob
 
 
-""" encoder layer """
+""" encoder """
 class Encoder(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -139,7 +134,7 @@ class Encoder(nn.Module):
         self.layers = nn.ModuleList([EncoderLayer(self.config) for _ in range(self.config.n_layer)])
     
     def forward(self, inputs, segments):
-        positions = torch.arange(inputs.size(1), device=inputs.device, dtype=inputs.dtype).expand(inputs.size(0), inputs.size(1)) + 1
+        positions = torch.arange(inputs.size(1), device=inputs.device, dtype=inputs.dtype).expand(inputs.size(0), inputs.size(1)).contiguous() + 1
         pos_mask = inputs.eq(self.config.i_pad)
         positions.masked_fill_(pos_mask, 0)
 

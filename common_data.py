@@ -7,40 +7,6 @@ import json
 from vocab import load_vocab, build_corpus
 
 
-""" pretrain data 준비 """
-def prepare_pretrain(args, vocab, outfile):
-    line_cnt = 0
-    with open(args.corpus, "r") as f:
-        for line in f:
-            line_cnt += 1
-
-    # 단락 단위로 doc 생성 (vocab 적용)
-    docs = []
-    with open(args.corpus, "r") as f:
-        doc = []
-        for i, line in enumerate(tqdm(f, total=line_cnt, desc=f"{args.corpus} loading", unit=" lines")):
-            line = line.strip()
-            if line == "":
-                if 0 < len(doc):
-                    docs.append(doc)
-                    doc = []
-            else:
-                pieces = vocab.encode_as_pieces(line)
-                if 0 < len(pieces):
-                    doc.append(pieces)
-        if doc:
-            docs.append(doc)
-    
-    # 단락 단위로 json 형태로 저장
-    with open(outfile, "w") as f:
-        with tqdm(total=len(docs), desc=f"{outfile} saving") as pbar:
-            for doc in docs:
-                instance = { "doc": doc }
-                f.write(json.dumps(instance))
-                f.write("\n")
-                pbar.update(1)
-
-
 """ train data 준비 """
 def prepare_train(args, vocab, infile, outfile):
     df = pd.read_csv(infile, sep="\t", engine="python")
@@ -81,8 +47,6 @@ if __name__ == "__main__":
         args.corpus = "data/kowiki.txt"
         if not os.path.isfile(args.corpus):
             build_corpus("data/kowiki.csv", args.corpus)
-        if not os.path.isfile("data/kowiki.json"):
-            prepare_pretrain(args, vocab, "data/kowiki.json")
         if not os.path.isfile("data/ratings_train.json"):
             prepare_train(args, vocab, "data/ratings_train.txt", "data/ratings_train.json")
         if not os.path.isfile("data/ratings_test.json"):

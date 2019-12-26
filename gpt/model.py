@@ -21,11 +21,6 @@ def get_attn_decoder_mask(seq):
     return subsequent_mask
 
 
-"""gelu"""
-def gelu(x):
-    return 0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * torch.pow(x, 3))))
-
-
 """ scale dot product attention """
 class ScaledDotProductAttention(nn.Module):
     def __init__(self, config):
@@ -53,9 +48,9 @@ class MultiHeadAttention(nn.Module):
         super().__init__()
         self.config = config
 
-        self.W_Q = nn.Linear(self.config.d_hidn, self.config.d_head * self.config.n_head)
-        self.W_K = nn.Linear(self.config.d_hidn, self.config.d_head * self.config.n_head)
-        self.W_V = nn.Linear(self.config.d_hidn, self.config.d_head * self.config.n_head)
+        self.W_Q = nn.Linear(self.config.d_hidn, self.config.n_head * self.config.d_head)
+        self.W_K = nn.Linear(self.config.d_hidn, self.config.n_head * self.config.d_head)
+        self.W_V = nn.Linear(self.config.d_hidn, self.config.n_head * self.config.d_head)
         self.scaled_dot_attn = ScaledDotProductAttention(self.config)
         self.linear = nn.Linear(self.config.n_head * self.config.d_head, self.config.d_hidn)
         self.dropout = nn.Dropout(config.dropout)
@@ -91,7 +86,7 @@ class PoswiseFeedForwardNet(nn.Module):
 
         self.conv1 = nn.Conv1d(in_channels=self.config.d_hidn, out_channels=self.config.d_ff, kernel_size=1)
         self.conv2 = nn.Conv1d(in_channels=self.config.d_ff, out_channels=self.config.d_hidn, kernel_size=1)
-        self.active = gelu
+        self.active = F.gelu
         self.dropout = nn.Dropout(config.dropout)
 
     def forward(self, inputs):
@@ -138,7 +133,7 @@ class Decoder(nn.Module):
         self.layers = nn.ModuleList([DecoderLayer(self.config) for _ in range(self.config.n_layer)])
     
     def forward(self, dec_inputs):
-        positions = torch.arange(dec_inputs.size(1), device=dec_inputs.device, dtype=dec_inputs.dtype).expand(dec_inputs.size(0), dec_inputs.size(1)) + 1
+        positions = torch.arange(dec_inputs.size(1), device=dec_inputs.device, dtype=dec_inputs.dtype).expand(dec_inputs.size(0), dec_inputs.size(1)).contiguous() + 1
         pos_mask = dec_inputs.eq(self.config.i_pad)
         positions.masked_fill_(pos_mask, 0)
     
@@ -227,7 +222,7 @@ class MovieClassification(nn.Module):
         # (bs, n_dec_seq, n_dec_vocab)
         logits_lm = self.projection_lm(dec_outputs)
         # (bs, d_hidn)
-        dec_outputs = dec_outputs[:, -1]
+        dec_outputs = dec_outputs[:, -1].contiguous()
         # (bs, n_output)
         logits_cls = self.projection_cls(dec_outputs)
         # (bs, n_dec_seq - 1, n_dec_vocab), (bs, n_output), [(bs, n_head, n_dec_seq, n_dec_seq)]

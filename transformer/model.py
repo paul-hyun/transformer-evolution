@@ -6,16 +6,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-""" sinusoid position embedding """
+""" sinusoid position encoding """
 def get_sinusoid_encoding_table(n_seq, d_hidn):
-    def cal_angle(position, i_embed):
-        return position / np.power(10000, 2 * (i_embed // 2) / d_hidn)
+    def cal_angle(position, i_hidn):
+        return position / np.power(10000, 2 * (i_hidn // 2) / d_hidn)
     def get_posi_angle_vec(position):
-        return [cal_angle(position, i_embed) for i_embed in range(d_hidn)]
+        return [cal_angle(position, i_hidn) for i_hidn in range(d_hidn)]
 
     sinusoid_table = np.array([get_posi_angle_vec(i_seq) for i_seq in range(n_seq)])
-    sinusoid_table[:, 0::2] = np.sin(sinusoid_table[:, 0::2])  # dim 2i
-    sinusoid_table[:, 1::2] = np.cos(sinusoid_table[:, 1::2])  # dim 2i+1
+    sinusoid_table[:, 0::2] = np.sin(sinusoid_table[:, 0::2])  # even index sin 
+    sinusoid_table[:, 1::2] = np.cos(sinusoid_table[:, 1::2])  # odd index cos
 
     return sinusoid_table
 
@@ -33,11 +33,6 @@ def get_attn_decoder_mask(seq):
     subsequent_mask = torch.ones_like(seq).unsqueeze(-1).expand(seq.size(0), seq.size(1), seq.size(1))
     subsequent_mask = subsequent_mask.triu(diagonal=1) # upper triangular part of a matrix(2-D)
     return subsequent_mask
-
-
-"""gelu"""
-def gelu(x):
-    return 0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * torch.pow(x, 3))))
 
 
 """ scale dot product attention """
@@ -67,9 +62,9 @@ class MultiHeadAttention(nn.Module):
         super().__init__()
         self.config = config
 
-        self.W_Q = nn.Linear(self.config.d_hidn, self.config.d_head * self.config.n_head)
-        self.W_K = nn.Linear(self.config.d_hidn, self.config.d_head * self.config.n_head)
-        self.W_V = nn.Linear(self.config.d_hidn, self.config.d_head * self.config.n_head)
+        self.W_Q = nn.Linear(self.config.d_hidn, self.config.n_head * self.config.d_head)
+        self.W_K = nn.Linear(self.config.d_hidn, self.config.n_head * self.config.d_head)
+        self.W_V = nn.Linear(self.config.d_hidn, self.config.n_head * self.config.d_head)
         self.scaled_dot_attn = ScaledDotProductAttention(self.config)
         self.linear = nn.Linear(self.config.n_head * self.config.d_head, self.config.d_hidn)
         self.dropout = nn.Dropout(config.dropout)
@@ -105,7 +100,7 @@ class PoswiseFeedForwardNet(nn.Module):
 
         self.conv1 = nn.Conv1d(in_channels=self.config.d_hidn, out_channels=self.config.d_ff, kernel_size=1)
         self.conv2 = nn.Conv1d(in_channels=self.config.d_ff, out_channels=self.config.d_hidn, kernel_size=1)
-        self.active = gelu
+        self.active = F.gelu
         self.dropout = nn.Dropout(config.dropout)
 
     def forward(self, inputs):
@@ -140,7 +135,7 @@ class EncoderLayer(nn.Module):
         return ffn_outputs, attn_prob
 
 
-""" encoder layer """
+""" encoder """
 class Encoder(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -153,7 +148,7 @@ class Encoder(nn.Module):
         self.layers = nn.ModuleList([EncoderLayer(self.config) for _ in range(self.config.n_layer)])
     
     def forward(self, inputs):
-        positions = torch.arange(inputs.size(1), device=inputs.device, dtype=inputs.dtype).expand(inputs.size(0), inputs.size(1)) + 1
+        positions = torch.arange(inputs.size(1), device=inputs.device, dtype=inputs.dtype).expand(inputs.size(0), inputs.size(1)).contiguous() + 1
         pos_mask = inputs.eq(self.config.i_pad)
         positions.masked_fill_(pos_mask, 0)
 
@@ -212,7 +207,7 @@ class Decoder(nn.Module):
         self.layers = nn.ModuleList([DecoderLayer(self.config) for _ in range(self.config.n_layer)])
     
     def forward(self, dec_inputs, enc_inputs, enc_outputs):
-        positions = torch.arange(dec_inputs.size(1), device=dec_inputs.device, dtype=dec_inputs.dtype).expand(dec_inputs.size(0), dec_inputs.size(1)) + 1
+        positions = torch.arange(dec_inputs.size(1), device=dec_inputs.device, dtype=dec_inputs.dtype).expand(dec_inputs.size(0), dec_inputs.size(1)).contiguous() + 1
         pos_mask = dec_inputs.eq(self.config.i_pad)
         positions.masked_fill_(pos_mask, 0)
     
