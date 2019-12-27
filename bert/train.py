@@ -101,7 +101,7 @@ def train_model(rank, world_size, args):
     vocab = load_vocab(args.vocab)
 
     config = cfg.Config.load(args.config)
-    config.n_enc_vocab, config.n_dec_vocab = len(vocab), len(vocab)
+    config.n_enc_vocab = len(vocab)
     config.device = torch.device(f"cuda:{rank}" if torch.cuda.is_available() else "cpu")
     print(config)
 
@@ -111,8 +111,8 @@ def train_model(rank, world_size, args):
         best_epoch, best_loss, best_score = model.load(args.save)
         print(f"rank: {rank} load state dict from: {args.save}")
     elif os.path.isfile(args.pretrain):
-        model.bert.load(args.pretrain)
-        print(f"rank: {rank} load pretrain from: {args.pretrain}")
+        epoch, loss = model.bert.load(args.pretrain)
+        print(f"rank: {rank} load pretrain from: {args.pretrain}, epoch={epoch}, loss={loss}")
     if 1 < args.n_gpu:
         model.to(config.device)
         model = DistributedDataParallel(model, device_ids=[rank], find_unused_parameters=True)
@@ -128,11 +128,11 @@ def train_model(rank, world_size, args):
     t_total = len(train_loader) * args.epoch
     no_decay = ['bias', 'LayerNorm.weight']
     optimizer_grouped_parameters = [
-        {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)], 'weight_decay': config.weight_decay},
+        {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)], 'weight_decay': args.weight_decay},
         {'params': [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
     ]
-    optimizer = optim.AdamW(optimizer_grouped_parameters, lr=config.learning_rate, eps=config.adam_epsilon)
-    scheduler = optim.get_linear_schedule_with_warmup(optimizer, num_warmup_steps=config.warmup_steps, num_training_steps=t_total)
+    optimizer = optim.AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
+    scheduler = optim.get_linear_schedule_with_warmup(optimizer, num_warmup_steps=args.warmup_steps, num_training_steps=t_total)
 
     offset = best_epoch
     for step in trange(args.epoch, desc="Epoch"):
@@ -170,14 +170,22 @@ if __name__ == '__main__':
                         help="save file")
     parser.add_argument("--pretrain", default="save_pretrain.pth", type=str, required=False,
                         help="pretrain file")
-    parser.add_argument("--epoch", default=10, type=int, required=False,
+    parser.add_argument("--epoch", default=20, type=int, required=False,
                         help="epoch")
-    parser.add_argument("--batch", default=128, type=int, required=False,
+    parser.add_argument("--batch", default=512, type=int, required=False,
                         help="batch")
     parser.add_argument("--gpu", default=None, type=int, required=False,
                         help="GPU id to use.")
     parser.add_argument('--seed', type=int, default=42, required=False,
                         help="random seed for initialization")
+    parser.add_argument('--weight_decay', type=float, default=0, required=False,
+                        help="weight decay")
+    parser.add_argument('--learning_rate', type=float, default=5e-5, required=False,
+                        help="learning rate")
+    parser.add_argument('--adam_epsilon', type=float, default=1e-8, required=False,
+                        help="adam epsilon")
+    parser.add_argument('--warmup_steps', type=float, default=0, required=False,
+                        help="warmup steps")
     args = parser.parse_args()
 
     if torch.cuda.is_available():

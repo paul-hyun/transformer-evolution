@@ -77,15 +77,16 @@ def train_model(rank, world_size, args):
     vocab = load_vocab(args.vocab)
 
     config = cfg.Config.load(args.config)
-    config.n_enc_vocab, config.n_dec_vocab = len(vocab), len(vocab)
+    config.n_enc_vocab = len(vocab)
     config.device = torch.device(f"cuda:{rank}" if torch.cuda.is_available() else "cpu")
     print(config)
 
     best_epoch, best_loss = 0, 0
     model = bert.BERTPretrain(config)
     if os.path.isfile(args.save):
-        model.bert.load(args.save)
-        print(f"rank: {rank} load pretrain from: {args.save}")
+        best_epoch, best_loss = model.bert.load(args.save)
+        print(f"rank: {rank} load pretrain from: {args.save}, epoch={best_epoch}, loss={best_loss}")
+        best_epoch += 1
     if 1 < args.n_gpu:
         model.to(config.device)
         model = DistributedDataParallel(model, device_ids=[rank], find_unused_parameters=True)
@@ -95,22 +96,23 @@ def train_model(rank, world_size, args):
     criterion_lm = torch.nn.CrossEntropyLoss(ignore_index=-1, reduction='mean')
     criterion_cls = torch.nn.CrossEntropyLoss()
 
-    train_loader, train_sampler = data.build_pretrain_loader(vocab, args, shuffle=True)
+    train_loader = data.build_pretrain_loader(vocab, args, epoch=best_epoch, shuffle=True)
 
     t_total = len(train_loader) * args.epoch
     no_decay = ['bias', 'LayerNorm.weight']
     optimizer_grouped_parameters = [
-        {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)], 'weight_decay': config.weight_decay},
+        {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)], 'weight_decay': args.weight_decay},
         {'params': [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
     ]
-    optimizer = optim.AdamW(optimizer_grouped_parameters, lr=config.learning_rate, eps=config.adam_epsilon)
-    scheduler = optim.get_linear_schedule_with_warmup(optimizer, num_warmup_steps=config.warmup_steps, num_training_steps=t_total)
+    optimizer = optim.AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
+    scheduler = optim.get_linear_schedule_with_warmup(optimizer, num_warmup_steps=args.warmup_steps, num_training_steps=t_total)
 
     offset = best_epoch
     for step in trange(args.epoch, desc="Epoch"):
-        if train_sampler:
-            train_sampler.set_epoch(step)
         epoch = step + offset
+        if 0 < step:
+            del train_loader
+            train_loader = data.build_pretrain_loader(vocab, args, epoch=epoch, shuffle=True)
 
         loss = train_epoch(config, rank, epoch, model, criterion_lm, criterion_cls, optimizer, scheduler, train_loader)
 
@@ -132,18 +134,28 @@ if __name__ == '__main__':
                         help="config file")
     parser.add_argument("--vocab", default="../kowiki.model", type=str, required=False,
                         help="vocab file")
-    parser.add_argument("--input", default="../data/kowiki_bert.json", type=str, required=False,
+    parser.add_argument("--input", default="../data/kowiki_bert_{}.json", type=str, required=False,
                         help="input pretrain data file")
+    parser.add_argument("--count", default=10, type=int, required=False,
+                        help="count of pretrain data")
     parser.add_argument("--save", default="save_pretrain.pth", type=str, required=False,
                         help="save file")
-    parser.add_argument("--epoch", default=5, type=int, required=False,
+    parser.add_argument("--epoch", default=20, type=int, required=False,
                         help="epoch")
-    parser.add_argument("--batch", default=28, type=int, required=False,
+    parser.add_argument("--batch", default=256, type=int, required=False,
                         help="batch")
     parser.add_argument("--gpu", default=None, type=int, required=False,
                         help="GPU id to use.")
     parser.add_argument('--seed', type=int, default=42, required=False,
                         help="random seed for initialization")
+    parser.add_argument('--weight_decay', type=float, default=0, required=False,
+                        help="weight decay")
+    parser.add_argument('--learning_rate', type=float, default=5e-5, required=False,
+                        help="learning rate")
+    parser.add_argument('--adam_epsilon', type=float, default=1e-8, required=False,
+                        help="adam epsilon")
+    parser.add_argument('--warmup_steps', type=float, default=0, required=False,
+                        help="warmup steps")
     args = parser.parse_args()
 
     if torch.cuda.is_available():
