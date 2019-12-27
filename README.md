@@ -34,7 +34,7 @@ $ python kowiki.py
 
 ## vocab 생성
 - kowiki 데이터를 sentencepiece를 이용해서 생성 합니다.
-- vocab size는 32,000개 입니다.
+- vocab size는 8,000개 입니다.
 ```sh
 $ python vocab.py
 ```
@@ -73,10 +73,10 @@ by Generative Pre-Training](https://s3-us-west-2.amazonaws.com/openai-assets/res
 ## 결과
 | ITEM                | Pretrain | epoch  | loss  | accuracy |
 |---------------------|----------|--------|-------|----------|
-| transformer_pre:0   | 0        | 6      | 0.257 | 0.839    |
-| gpt-pre:10-lm:50    | 10       | 9      | 0.253 | 0.844    |
-| bert-pre:5          | 5        | 9      | 0.190 | 0.827    |
-| spanbert-pre:10-max | 10       | 5      | 0.254 | 0.827    |
+| transformer-pre:0   | 0        | 18     | 0.303 | 0.832    |
+| gpt-pre:60-lm:0     | 60       | 16     | 0.322 | 0.837    |
+| bert-pre:60         | 60       | 17     | 0.349 | 0.815    |
+
 
 #### loss
 ![](./img/loss.svg)
