@@ -108,6 +108,7 @@ def train_model(rank, world_size, args):
     scheduler = optim.get_linear_schedule_with_warmup(optimizer, num_warmup_steps=args.warmup_steps, num_training_steps=t_total)
 
     offset = best_epoch
+    losses = []
     for step in trange(args.epoch, desc="Epoch"):
         epoch = step + offset
         if 0 < step:
@@ -115,6 +116,7 @@ def train_model(rank, world_size, args):
             train_loader = data.build_pretrain_loader(vocab, args, epoch=epoch, shuffle=True)
 
         loss = train_epoch(config, rank, epoch, model, criterion_lm, criterion_cls, optimizer, scheduler, train_loader)
+        losses.append(loss)
 
         if master:
             best_epoch, best_loss = epoch, loss
@@ -124,6 +126,7 @@ def train_model(rank, world_size, args):
                 model.bert.save(best_epoch, best_loss, args.save)
             print(f">>>> rank: {rank} save model to {args.save}, epoch={best_epoch}, loss={best_loss:.3f}")
 
+    print(f">>>> rank: {rank} losses: {losses}")
     if 1 < args.n_gpu:
         destroy_process_group()
 
