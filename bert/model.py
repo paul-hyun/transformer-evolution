@@ -161,12 +161,19 @@ class BERT(nn.Module):
         self.config = config
 
         self.encoder = Encoder(self.config)
+
+        self.linear = nn.Linear(config.d_hidn, config.d_hidn)
+        self.activation = torch.tanh
     
     def forward(self, inputs, segments):
         # (bs, n_seq, d_hidn), [(bs, n_head, n_enc_seq, n_enc_seq)]
         outputs, self_attn_probs = self.encoder(inputs, segments)
-        # (bs, n_enc_seq, n_enc_vocab), [(bs, n_head, n_enc_seq, n_enc_seq)]
-        return outputs, self_attn_probs
+        # (bs, d_hidn)
+        outputs_cls = outputs[:, 0].contiguous()
+        outputs_cls = self.linear(outputs_cls)
+        outputs_cls = self.activation(outputs_cls)
+        # (bs, n_enc_seq, n_enc_vocab), (bs, d_hidn), [(bs, n_head, n_enc_seq, n_enc_seq)]
+        return outputs, outputs_cls, self_attn_probs
     
     def save(self, epoch, loss, path):
         torch.save({
@@ -195,10 +202,8 @@ class BERTPretrain(nn.Module):
         self.projection_lm.weight = self.bert.encoder.enc_emb.weight
     
     def forward(self, inputs, segments):
-        # (bs, n_enc_seq, d_hidn), [(bs, n_head, n_enc_seq, n_enc_seq)]
-        outputs, attn_probs = self.bert(inputs, segments)
-        # (bs, d_hidn)
-        outputs_cls = outputs[:, 0].contiguous()
+        # (bs, n_enc_seq, d_hidn), (bs, d_hidn), [(bs, n_head, n_enc_seq, n_enc_seq)]
+        outputs, outputs_cls, attn_probs = self.bert(inputs, segments)
         # (bs, 2)
         logits_cls = self.projection_cls(outputs_cls)
         # (bs, n_enc_seq, n_enc_vocab)
@@ -218,12 +223,10 @@ class MovieClassification(nn.Module):
         self.projection_cls = nn.Linear(self.config.d_hidn, self.config.n_output, bias=False)
     
     def forward(self, inputs, segments):
-        # (bs, n_enc_seq, d_hidn), [(bs, n_head, n_enc_seq, n_enc_seq)]
-        output, attn_probs = self.bert(inputs, segments)
-        # (bs, d_hidn)
-        output = output[:, 0].contiguous()
+        # (bs, n_enc_seq, d_hidn), (bs, d_hidn), [(bs, n_head, n_enc_seq, n_enc_seq)]
+        outputs, outputs_cls, attn_probs = self.bert(inputs, segments)
         # (bs, n_output)
-        logits_cls = self.projection_cls(output)
+        logits_cls = self.projection_cls(outputs_cls)
         # (bs, n_output), [(bs, n_head, n_enc_seq, n_enc_seq)]
         return logits_cls, attn_probs
     

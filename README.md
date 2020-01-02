@@ -75,7 +75,7 @@ by Generative Pre-Training](https://s3-us-west-2.amazonaws.com/openai-assets/res
 |---------------------|----------|--------|-------|----------|
 | transformer-pre:0   | 0        | 18     | 0.303 | 0.832    |
 | gpt-pre:60-lm:0     | 60       | 16     | 0.322 | 0.837    |
-| bert-pre:60         | 60       | 17     | 0.349 | 0.815    |
+| bert-pre:60         | 60       | 19     | 0.349 | 0.818   |
 
 
 #### loss
