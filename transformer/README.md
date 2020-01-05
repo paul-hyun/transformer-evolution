@@ -18,9 +18,9 @@ $ python train.py
 
 
 ## 결과
-| ITEM              | Pretrain | epoch  | loss  | accuracy |
-|-------------------|----------|--------|-------|----------|
-| transformer-pre:0 | 0        | 18     | 0.303 | 0.832    |
+| ITEM              | Pretrain | epoch  | loss   | accuracy |
+|-------------------|----------|--------|--------|----------|
+| transformer-pre:0 | 0        | 19     | 0.3054 | 0.8312   |
 
 #### loss
 ![](./img/loss.svg)

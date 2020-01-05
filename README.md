@@ -71,11 +71,11 @@ by Generative Pre-Training](https://s3-us-west-2.amazonaws.com/openai-assets/res
 
 
 ## 결과
-| ITEM                | Pretrain | epoch  | loss  | accuracy |
-|---------------------|----------|--------|-------|----------|
-| transformer-pre:0   | 0        | 18     | 0.303 | 0.832    |
-| gpt-pre:60-lm:0     | 60       | 16     | 0.322 | 0.837    |
-| bert-pre:60         | 60       | 19     | 0.349 | 0.818   |
+| ITEM                | Pretrain | epoch  | loss   | accuracy |
+|---------------------|----------|--------|--------|----------|
+| transformer-pre:0   | 0        | 19     | 0.3054 | 0.8312   |
+| gpt-pre:60-lm:0     | 60       | 19     | 0.3117 | 0.8401   |
+| bert-pre:40         | 40       | 19     | 0.3507 | 0.8175   |
 
 
 #### loss
