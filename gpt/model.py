@@ -6,6 +6,20 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+""" sinusoid position encoding """
+def get_sinusoid_encoding_table(n_seq, d_hidn):
+    def cal_angle(position, i_hidn):
+        return position / np.power(10000, 2 * (i_hidn // 2) / d_hidn)
+    def get_posi_angle_vec(position):
+        return [cal_angle(position, i_hidn) for i_hidn in range(d_hidn)]
+
+    sinusoid_table = np.array([get_posi_angle_vec(i_seq) for i_seq in range(n_seq)])
+    sinusoid_table[:, 0::2] = np.sin(sinusoid_table[:, 0::2])  # even index sin 
+    sinusoid_table[:, 1::2] = np.cos(sinusoid_table[:, 1::2])  # odd index cos
+
+    return sinusoid_table
+
+
 """ attention pad mask """
 def get_attn_pad_mask(seq_q, seq_k, i_pad):
     batch_size, len_q = seq_q.size()
@@ -128,7 +142,8 @@ class Decoder(nn.Module):
         self.config = config
 
         self.dec_emb = nn.Embedding(self.config.n_dec_vocab, self.config.d_hidn)
-        self.pos_emb = nn.Embedding(self.config.n_dec_seq + 1, self.config.d_hidn)
+        sinusoid_table = torch.FloatTensor(get_sinusoid_encoding_table(self.config.n_dec_seq + 1, self.config.d_hidn))
+        self.pos_emb = nn.Embedding.from_pretrained(sinusoid_table)
 
         self.layers = nn.ModuleList([DecoderLayer(self.config) for _ in range(self.config.n_layer)])
     
